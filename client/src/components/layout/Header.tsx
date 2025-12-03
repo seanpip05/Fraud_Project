@@ -14,6 +14,8 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import RuleIcon from "@mui/icons-material/Rule";
 import HistoryIcon from "@mui/icons-material/History";
 import CasinoIcon from "@mui/icons-material/Casino";
+import LogoutIcon from "@mui/icons-material/Logout";
+import { useAuth } from "../../context/AuthContext";
 
 // הגדרת צבעים כהים ומקצועיים לאווירת אבטחת מידע
 const darkTheme = createTheme({
@@ -40,6 +42,12 @@ const navItems = [
 ];
 
 export const Header: React.FC = () => {
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
     <ThemeProvider theme={darkTheme}>
       <AppBar
@@ -83,15 +91,21 @@ export const Header: React.FC = () => {
             ))}
           </Box>
 
-          {/* כפתור יציאה/כניסה */}
+          {/* כפתור יציאה */}
           <Button
             color="inherit"
+            onClick={handleLogout}
+            startIcon={<LogoutIcon />}
             sx={{
               ml: 2,
               border: `1px solid ${darkTheme.palette.secondary.main}`,
+              textTransform: "none",
+              "&:hover": {
+                backgroundColor: darkTheme.palette.secondary.dark,
+              },
             }}
           >
-            Login / Logout
+            Logout
           </Button>
         </Toolbar>
       </AppBar>

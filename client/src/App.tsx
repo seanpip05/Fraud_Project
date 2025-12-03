@@ -1,15 +1,15 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/layout/Layout";
-import DashboardPage from "./pages/DashboardPage"; // העמוד שהתחלנו לבנות
+import DashboardPage from "./pages/DashboardPage";
 import ScenariosPage from "./pages/ScenariosPage";
 import ReportsPage from "./pages/ReportsPage";
 import RulesPage from "./pages/RulesPage";
-import LoginPage from "./pages/LoginPage"; // נכין אותו ריק
+import { LoginPage } from "./pages/LoginPage";
+import { useAuth } from "./context/AuthContext";
 
 const App: React.FC = () => {
-  // בגלל שאין לנו עדיין מנגנון Auth אמיתי, נניח שאנחנו תמיד מחוברים
-  const isAuthenticated = true;
+  const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
     return <LoginPage />;
