@@ -34,8 +34,8 @@ const darkTheme = createTheme({
 
 const navItems = [
   { name: "Dashboard", path: "/", icon: <DashboardIcon /> },
-  { name: "Scenarios", path: "/scenarios", icon: <CasinoIcon /> },
   { name: "Rules", path: "/rules", icon: <RuleIcon /> },
+  { name: "Scenarios", path: "/scenarios", icon: <CasinoIcon /> },
   { name: "Reports", path: "/reports", icon: <HistoryIcon /> },
 ];
 
