@@ -21,7 +21,7 @@ import {
 import SecurityIcon from "@mui/icons-material/Security";
 import GppBadIcon from "@mui/icons-material/GppBad";
 // ייבוא הטיפוסים מה-Hook שלנו
-import { GraphDataPoint } from "../../hooks/useDashboardSimulation";
+import type { GraphDataPoint } from "../../hooks/useDashboardSimulation";
 
 // הגדרת המאפיינים שהרכיב מצפה לקבל
 interface DashboardViewProps {
