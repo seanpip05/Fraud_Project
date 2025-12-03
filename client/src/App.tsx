@@ -1,11 +1,11 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Layout } from "./components/Layout/Layout";
+import { Layout } from "./components/layout/Layout";
 import DashboardPage from "./pages/DashboardPage"; // העמוד שהתחלנו לבנות
 import ScenariosPage from "./pages/ScenariosPage";
 // RulesPage import removed because the file doesn't exist; provide a local placeholder
 import ReportsPage from "./pages/ReportsPage";
-import LoginPage from "./pages/LoginPage"; // נכין אותו ריק
+import { LoginPage } from "./pages/LoginPage"; // נכין אותו ריק
 
 const RulesPage: React.FC = () => {
   return <div>Rules Page (placeholder)</div>;
