@@ -9,7 +9,10 @@ import {
   Card,
   CardContent,
   CircularProgress,
+  Tooltip,
+  IconButton,
 } from "@mui/material";
+import InfoIcon from "@mui/icons-material/Info";
 import SaveIcon from "@mui/icons-material/Save";
 import {
   ATTACK_TYPES,
@@ -45,14 +48,62 @@ export const ScenarioForm: React.FC<ScenarioFormProps> = (props) => {
   return (
     <Card sx={{ mb: 4, backgroundColor: "background.paper", boxShadow: 5 }}>
       <CardContent>
-        <Typography
-          variant="h5"
-          gutterBottom
-          color="primary.light"
-          fontWeight="bold"
-        >
-          Create New Scenario
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+          <Typography
+            variant="h5"
+            gutterBottom
+            color="primary.light"
+            fontWeight="bold"
+          >
+            Create New Scenario
+          </Typography>
+          {/* אייקון מידע עם פירוט לפי הכרטיסייה הנוכחית */}
+          <Tooltip
+            title={
+              <Box sx={{ p: 1, maxWidth: "500px" }}>
+                <Typography
+                  variant="subtitle1"
+                  color="primary.light"
+                  sx={{ mb: 1, fontWeight: "bold" }}
+                >
+                  {selectedAttackType} Attack Details
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 2 }}>
+                  {currentAttack.description}
+                </Typography>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ mt: 1, mb: 0.5, textDecoration: "underline" }}
+                >
+                  Input Parameters:
+                </Typography>
+                {currentAttack.fields.map((f, i) => (
+                  <Box key={i} sx={{ mb: 1 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ fontWeight: "bold", color: "secondary.light" }}
+                    >
+                      • {f.label}:
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{ display: "block", ml: 1 }}
+                    >
+                      {f.helper}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            }
+            arrow
+            placement="right"
+            slotProps={{ popper: { sx: { maxWidth: "500px" } } }}
+          >
+            <IconButton color="info" size="small" sx={{ ml: 1 }}>
+              <InfoIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
 
         <Tabs
           value={selectedAttackType}

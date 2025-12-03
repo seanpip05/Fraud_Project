@@ -38,34 +38,36 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   return (
     <Box
       sx={{
+        position: "fixed",
+        inset: 0 /* shorthand for top/left/right/bottom: 0 */,
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        minHeight: "100vh",
-        backgroundImage: "linear-gradient(to bottom right, #121212, #000000)",
+        backgroundColor: "background.default",
       }}
     >
       <Paper
-        elevation={10}
+        elevation={6}
         sx={{
           p: 5,
-          minWidth: 400,
-          backgroundColor: "#1e1e1e",
-          borderRadius: 3,
+          minWidth: { xs: 320, sm: 420 },
+          maxWidth: 500,
+          backgroundColor: "background.paper",
+          borderRadius: 2,
+          boxShadow: (theme) => theme.shadows[6],
         }}
       >
         {/* Header */}
-        <Box sx={{ textAlign: "center", mb: 3 }}>
-          <SecurityIcon sx={{ fontSize: 60, color: "secondary.main", mb: 2 }} />
+        <Box sx={{ textAlign: "center", mb: 4 }}>
+          <SecurityIcon sx={{ fontSize: 64, color: "secondary.main", mb: 2 }} />
           <Typography
             variant="h4"
             fontWeight="bold"
-            color="primary.light"
-            gutterBottom
+            sx={{ color: "text.primary", mb: 1 }}
           >
             Fraud Detection System
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>
             Secure Login Portal
           </Typography>
         </Box>
@@ -87,6 +89,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             onChange={(e) => setUsername(e.target.value)}
             disabled={isLoading}
             required
+            autoComplete="username"
             sx={{ mb: 3 }}
           />
 
@@ -99,6 +102,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             onChange={(e) => setPassword(e.target.value)}
             disabled={isLoading}
             required
+            autoComplete="current-password"
             sx={{ mb: 3 }}
             InputProps={{
               endAdornment: (
@@ -106,6 +110,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                   <IconButton
                     onClick={() => setShowPassword(!showPassword)}
                     edge="end"
+                    sx={{ color: "#9e9e9e" }}
                   >
                     {showPassword ? <VisibilityOff /> : <Visibility />}
                   </IconButton>
@@ -118,7 +123,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             type="submit"
             fullWidth
             variant="contained"
-            color="secondary"
             size="large"
             startIcon={
               isLoading ? (
@@ -128,20 +132,16 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               )
             }
             disabled={isLoading || !username || !password}
-            sx={{
-              py: 1.5,
-              fontWeight: "bold",
-              fontSize: "1rem",
-            }}
+            sx={{ py: 1.5, fontWeight: "bold", textTransform: "none" }}
           >
-            {isLoading ? "Authenticating..." : "Login"}
+            {isLoading ? "Authenticating..." : "Sign In"}
           </Button>
         </form>
 
         {/* Demo Credentials Hint */}
         <Box sx={{ mt: 3, textAlign: "center" }}>
-          <Typography variant="caption" color="text.secondary">
-            Demo Credentials: admin / admin
+          <Typography variant="caption" sx={{ color: "text.secondary" }}>
+            Demo: admin / admin
           </Typography>
         </Box>
       </Paper>
