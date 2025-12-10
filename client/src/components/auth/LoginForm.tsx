@@ -110,7 +110,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                   <IconButton
                     onClick={() => setShowPassword(!showPassword)}
                     edge="end"
-                    sx={{ color: "#9e9e9e" }}
+                    sx={{ color: "text.secondary" }}
                   >
                     {showPassword ? <VisibilityOff /> : <Visibility />}
                   </IconButton>

@@ -1,6 +1,27 @@
 import React, { useState } from "react";
+import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
 import { useAuth } from "../context/AuthContext";
 import { LoginForm } from "../components/auth/LoginForm";
+
+const darkTheme = createTheme({
+  palette: {
+    mode: "dark",
+    primary: {
+      main: "#0d47a1",
+    },
+    secondary: {
+      main: "#4caf50",
+    },
+    background: {
+      default: "#121212",
+      paper: "#1e1e1e",
+    },
+    text: {
+      primary: "#e0e0e0",
+      secondary: "#9e9e9e",
+    },
+  },
+});
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -25,6 +46,9 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <LoginForm onLogin={handleLogin} isLoading={isLoading} error={error} />
+    <ThemeProvider theme={darkTheme}>
+      <CssBaseline />
+      <LoginForm onLogin={handleLogin} isLoading={isLoading} error={error} />
+    </ThemeProvider>
   );
 };
