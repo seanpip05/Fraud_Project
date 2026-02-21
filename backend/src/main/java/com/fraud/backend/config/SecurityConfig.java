@@ -88,18 +88,25 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthFilter) throws Exception {
         http
+                // 1. כיבוי הגנות שלא רלוונטיות ל-REST API
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .authorizeHttpRequests(req ->
-                        // התיקון: נשתמש ב-AntPathRequestMatcher כדי להיות מפורשים יותר
-                        req.requestMatchers("/api/auth/login", "/api/auth/register").permitAll() // שיטה 1: לרשום את כל ה-Endpoints הפתוחים במפורש
 
-                                // או נשתמש ב-AntPathRequestMatcher לטווח מלא:
-                                // .requestMatchers(AntPathRequestMatcher.antMatcher("/api/auth/**")).permitAll() // אם שיטה 1 לא עובדת
-
-                                .anyRequest().authenticated()
+                // 2. ניהול הרשאות
+                .authorizeHttpRequests(req -> req
+                        // שימוש ב-Wildcard כדי לפתוח את כל מה שתחת auth
+                        .requestMatchers("/api/auth/**").permitAll()
+                        // פתיחת גישה ל-Console של H2 אם אתה משתמש בו
+                        .requestMatchers("/h2-console/**").permitAll()
+                        // כל שאר הנתיבים דורשים הזדהות
+                        .anyRequest().authenticated()
                 )
+
+                // 3. הגדרת Stateless (חשוב ל-JWT)
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
+
+                // 4. הוספת הפילטר
+                .authenticationProvider(authenticationProvider(userDetailsService()))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
