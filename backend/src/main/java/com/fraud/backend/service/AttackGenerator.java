@@ -9,82 +9,108 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.*;
 
 /**
- * מנוע התקיפה המרכזי.
- * אחראי על ייצור וניהול זרם בקשות ה-HTTP לעבר שרת המטרה.
+ * מנוע התקיפה המעודכן - כולל מנגנון עצירה אוטומטית לפי זמן (Duration).
  */
 @Service
 public class AttackGenerator {
 
-    // שימוש ב-HttpClient מובנה של Java 11+ לביצועים אופטימליים
     private final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(5))
             .build();
 
-    // ניהול משימות מתוזמנות (RPS)
+    // ניהול משימות מתוזמנות
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
 
-    // מפה לשמירת המשימות הרצות כדי שנוכל לעצור אותן
+    // מפה לשמירת המשימות הפעילות וניהול זמן הסיום שלהן
     private final Map<Long, ScheduledFuture<?>> activeTasks = new ConcurrentHashMap<>();
+    private final Random random = new Random();
 
-    /**
-     * התחלת הרצת תרחיש תקיפה
-     */
     public void startAttack(AttackScenario scenario) {
-        // שליפת פרמטרים מה-JSONB
-        Map<String, Object> params = scenario.getParams();
-        int rps = (int) params.getOrDefault("rps", 1);
-        String targetUrl = "http://localhost:8081/api/target"; // כתובת שרת 2 (זמני)
+        try {
+            Map<String, Object> params = scenario.getParams();
 
-        // חישוב השהייה בין בקשות לפי ה-RPS
-        long delayMicros = 1_000_000 / rps;
+            // שליפת RPS
+            int rps = 1;
+            if (params != null && params.get("rps") != null) {
+                rps = Integer.parseInt(params.get("rps").toString());
+            }
 
-        ScheduledFuture<?> task = scheduler.scheduleAtFixedRate(() -> {
-            executeSingleRequest(targetUrl, scenario.getType(), params);
-        }, 0, delayMicros, TimeUnit.MICROSECONDS);
+            // שליפת משך התקיפה בשניות (ברירת מחדל: 30 שניות)
+            int durationSeconds = 30;
+            if (params != null && params.get("duration") != null) {
+                durationSeconds = Integer.parseInt(params.get("duration").toString());
+            }
 
-        activeTasks.put(scenario.getId(), task);
-        System.out.println("Started attack: " + scenario.getName() + " with " + rps + " RPS");
+            String targetUrl = "http://localhost:8081/api/target";
+            long delayMicros = 1_000_000 / Math.max(rps, 1);
+
+            // יצירת משימת התקיפה המחזורית
+            ScheduledFuture<?> attackTask = scheduler.scheduleAtFixedRate(() -> {
+                executeSingleRequest(targetUrl, scenario.getType(), params);
+            }, 0, delayMicros, TimeUnit.MICROSECONDS);
+
+            activeTasks.put(scenario.getId(), attackTask);
+            System.out.println("🚀 Attack Started: " + scenario.getName() + " [" + rps + " RPS]");
+            System.out.println("⏱️ Attack will automatically stop in " + durationSeconds + " seconds.");
+
+            // תזמון עצירה אוטומטית
+            scheduler.schedule(() -> {
+                stopAttack(scenario.getId());
+                System.out.println("⏲️ Auto-stop triggered for scenario: " + scenario.getName());
+            }, durationSeconds, TimeUnit.SECONDS);
+
+        } catch (Exception e) {
+            System.err.println("❌ Error starting attack: " + e.getMessage());
+        }
     }
 
     /**
-     * עצירת תרחיש רץ
+     * עצירה ידנית או אוטומטית של התקיפה
      */
     public void stopAttack(Long scenarioId) {
         ScheduledFuture<?> task = activeTasks.remove(scenarioId);
         if (task != null) {
             task.cancel(true);
-            System.out.println("Stopped attack ID: " + scenarioId);
+            System.out.println("🛑 Attack Stopped for scenario ID: " + scenarioId);
         }
     }
 
-    /**
-     * ביצוע בקשת HTTP בודדת
-     */
     private void executeSingleRequest(String url, String type, Map<String, Object> params) {
         try {
             HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                     .uri(URI.create(url))
                     .timeout(Duration.ofSeconds(2));
 
-            // לוגיקה לפי סוג התקיפה
             if ("BRUTE_FORCE".equals(type)) {
-                String payload = (String) params.getOrDefault("payload", "");
-                requestBuilder.POST(HttpRequest.BodyPublishers.ofString(payload))
+                String basePayload = (params != null && params.get("payload") != null)
+                        ? params.get("payload").toString() : "user=admin";
+
+                // יצירת פיילוד דינמי לזיהוי דפוסים
+                String dynamicPayload = basePayload + "&attempt=" + random.nextInt(1000);
+
+                requestBuilder.POST(HttpRequest.BodyPublishers.ofString(dynamicPayload))
                         .header("Content-Type", "application/x-www-form-urlencoded");
             } else {
                 requestBuilder.GET();
             }
 
-            httpClient.sendAsync(requestBuilder.build(), HttpResponse.BodyHandlers.discarding())
-                    .thenAccept(res -> {
-                        // כאן נוכל בהמשך לאסוף נתונים על הצלחה/חסימה
+            // שליחת הבקשה ובדיקת התגובה מהשרת הקורבן
+            httpClient.sendAsync(requestBuilder.build(), HttpResponse.BodyHandlers.ofString())
+                    .thenAccept(response -> {
+                        if (response.statusCode() == 403) {
+                            // הדפסה רק פעם בכמה זמן כדי לא להציף את הלוג
+                            if (random.nextInt(10) == 1) {
+                                System.out.println("🛡️ [VICTIM BLOCKED] Requests are still being rejected (403).");
+                            }
+                        }
                     });
 
         } catch (Exception e) {
-            // התעלמות משגיאות בזמן תקיפה כדי לא לעצור את המנוע
+            // התעלמות משגיאות בקצב מהיר
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.fraud.backend.model.entity;
 
 import jakarta.persistence.*;
+import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,13 +18,16 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Setter
     @Column(nullable = false, unique = true)
     private String username;
 
+    @Setter
     @Column(nullable = false)
     private String password; // זה יהיה ה-Hash של הסיסמה
 
     // הגדרת תפקיד (Role) באמצעות Enum
+    @Setter
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role; // ADMIN או OPERATOR
@@ -83,20 +87,4 @@ public class User implements UserDetails {
         return true;
     }
 
-    // --- Getters ו-Setters של ה-ID וה-Role (לצורך שימוש כללי) ---
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Role getRole() {
-        return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
 }

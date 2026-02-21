@@ -1,15 +1,22 @@
 package com.fraud.victim.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
  * ישות המייצגת רישום של התקפה שנקלטה בשרת המטרה.
+ * שימוש ב-Lombok לחסכון ב-Boilerplate ובנייה גמישה.
  */
 @Entity
 @Table(name = "attack_logs")
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AttackLog {
 
     @Id

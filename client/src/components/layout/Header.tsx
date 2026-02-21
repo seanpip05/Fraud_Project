@@ -39,6 +39,7 @@ const navItems = [
   { name: "Rules", path: "/rules", icon: <RuleIcon /> },
   { name: "Scenarios", path: "/scenarios", icon: <CasinoIcon /> },
   { name: "Reports", path: "/reports", icon: <HistoryIcon /> },
+  // { name: "Victim Monitor", path: "/victim-monitor", icon: <SecurityIcon /> },
 ];
 
 export const Header: React.FC = () => {
