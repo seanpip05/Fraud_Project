@@ -61,4 +61,34 @@ public class ScenarioController {
         List<AttackScenario> scenarios = scenarioRepository.findAll();
         return ResponseEntity.ok(scenarios);
     }
+
+    // 3. PUT /api/scenarios/{id}: עדכון תרחיש קיים
+    @PutMapping("/{id}")
+    public ResponseEntity<AttackScenario> updateScenario(
+            @PathVariable Long id,
+            @RequestBody CreateScenarioDTO dto
+    ) {
+        Optional<AttackScenario> scenarioOptional = scenarioRepository.findById(id);
+        if (scenarioOptional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        AttackScenario scenario = scenarioOptional.get();
+        scenario.setName(dto.getName());
+        scenario.setType(dto.getType());
+        scenario.setParams(dto.getParams());
+
+        AttackScenario updatedScenario = scenarioRepository.save(scenario);
+        return ResponseEntity.ok(updatedScenario);
+    }
+
+    // 4. DELETE /api/scenarios/{id}: מחיקת תרחיש
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteScenario(@PathVariable Long id) {
+        if (!scenarioRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        scenarioRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
 }

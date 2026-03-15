@@ -28,27 +28,39 @@ export const LoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = (username: string, password: string) => {
+  const handleLogin = async (username: string, password: string) => {
     setIsLoading(true);
     setError(null);
 
-    // סימולציית קריאת API
-    setTimeout(() => {
-      if (username === "admin" && password === "admin") {
-        // ב-Backend אמיתי, היינו מקבלים JWT Token כאן
-        login(); // קריאה ל-AuthContext לעדכון המצב
+    try {
+      const response = await fetch("http://localhost:8080/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.token) {
+        login(data.token); // קריאה ל-AuthContext לעדכון המצב עם הטוקן
         console.log("Login Successful!");
       } else {
-        setError("Invalid credentials. Please use 'admin' / 'admin'.");
+        setError(data.error || "Invalid credentials.");
       }
+    } catch (err) {
+      console.error("Login failure", err);
+      setError("Network error. Please try again.");
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   return (
-    <ThemeProvider theme={darkTheme}>
-      <CssBaseline />
-      <LoginForm onLogin={handleLogin} isLoading={isLoading} error={error} />
-    </ThemeProvider>
+      <ThemeProvider theme={darkTheme}>
+        <CssBaseline />
+        <LoginForm onLogin={handleLogin} isLoading={isLoading} error={error} />
+      </ThemeProvider>
   );
 };
