@@ -28,6 +28,7 @@ public class AttackScenario {
     // הקשר ליוזר שיצר את התרחיש (ForeignKey)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private User createdBy;
 
     @Column(name = "created_at", nullable = false)

@@ -1,10 +1,11 @@
-import React, { createContext, useState, useContext } from "react";
+import React, { createContext, useState, useContext, useEffect } from "react";
 import type { ReactNode } from "react";
 
 // הגדרת הטיפוסים ל-Context
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: () => void;
+  token: string | null;
+  login: (token: string) => void;
   logout: () => void;
 }
 
@@ -26,22 +27,31 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  // מצב ההתחברות: מתחיל כ-false
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
 
-  // פונקציית כניסה: מעבירה ל-true (בלי בדיקות כרגע)
-  const login = () => {
-    console.log("LOGIN: Simulating successful login.");
+  // Initialize auth state from localStorage on load
+  useEffect(() => {
+    const storedToken = localStorage.getItem("jwt_token");
+    if (storedToken) {
+      setToken(storedToken);
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  const login = (newToken: string) => {
+    localStorage.setItem("jwt_token", newToken);
+    setToken(newToken);
     setIsAuthenticated(true);
   };
 
-  // פונקציית יציאה: מעבירה ל-false
   const logout = () => {
-    console.log("LOGOUT: User logged out.");
+    localStorage.removeItem("jwt_token");
+    setToken(null);
     setIsAuthenticated(false);
   };
 
-  const value = { isAuthenticated, login, logout };
+  const value = { isAuthenticated, token, login, logout };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
