@@ -35,21 +35,13 @@ public class TargetController {
     public ResponseEntity<?> generalTarget(@RequestBody(required = false) String body, HttpServletRequest request) {
         String clientIp = request.getRemoteAddr();
 
-        // בדיקה: האם הכתובת נמצאת ברשימת החסימה?
         if (analyticsService.isIpBlocked(clientIp)) {
-            System.out.println("⛔ ניסיון גישה נחסם מכתובת: " + clientIp);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of(
-                            "error", "Access Denied",
-                            "reason", "IP Blocked by Defense System",
-                            "status", 403
-                    ));
+            System.out.println("⛔ גישה נחסמה מכתובת: " + clientIp + " (Endpoint: /target)");
+            return createBlockedResponse();
         }
 
-        System.out.println("📥 בקשה התקבלה מ-" + clientIp + ". שומר לוג ל-DB...");
-
-        // שמירת הלוג בבסיס הנתונים
-        saveLog(request, body);
+        System.out.println("📥 בקשה התקבלה מ-" + clientIp + " בנתיב /api/target");
+        saveLog(request, body, 200);
 
         return ResponseEntity.ok(Map.of(
                 "message", "Target hit and logged!",
@@ -59,9 +51,88 @@ public class TargetController {
     }
 
     /**
+     * מטרה מציאותית: התחברות (מיועד ל-Brute Force)
+     */
+    @PostMapping("/login")
+    public ResponseEntity<?> loginTarget(@RequestBody(required = false) Map<String, String> creds, HttpServletRequest request) {
+        String clientIp = request.getRemoteAddr();
+
+        if (analyticsService.isIpBlocked(clientIp)) {
+            System.out.println("⛔ גישה נחסמה מכתובת: " + clientIp + " (Endpoint: /login)");
+            return createBlockedResponse();
+        }
+
+        System.out.println("🔐 הגיע ניסיון התחברות ל-/api/login מ-" + clientIp);
+
+        // כאן כל ניסיון (מלבד משתמש אדמין עם סיסמת אדמין) שגוי
+        boolean isSuccess = creds != null && "admin".equals(creds.get("username")) && "admin".equals(creds.get("password"));
+        int status = isSuccess ? 200 : 401;
+
+        saveLog(request, creds != null ? creds.toString() : "No payload", status);
+
+        if (isSuccess) {
+            return ResponseEntity.ok(Map.of("message", "Login successful"));
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid credentials"));
+        }
+    }
+
+    /**
+     * מטרה מציאותית: חיפוש מוצרים (מיועד ל-SQL Injection)
+     */
+    @GetMapping("/products")
+    public ResponseEntity<?> productsTarget(@RequestParam(required = false) String query, HttpServletRequest request) {
+        String clientIp = request.getRemoteAddr();
+
+        if (analyticsService.isIpBlocked(clientIp)) {
+            System.out.println("⛔ גישה נחסמה מכתובת: " + clientIp + " (Endpoint: /products)");
+            return createBlockedResponse();
+        }
+
+        System.out.println("📦 בקשה לחיפוש מוצרים הגיעה ל-/api/products מ-" + clientIp);
+        saveLog(request, "Query: " + query, 200);
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Products list fetched",
+                "results", 15,
+                "query", query != null ? query : ""
+        ));
+    }
+
+    /**
+     * מטרה מציאותית: תשלום/צ'קאאוט (מיועד ל-Parameter Tampering או Logic Flaw)
+     */
+    @PostMapping("/checkout")
+    public ResponseEntity<?> checkoutTarget(@RequestBody(required = false) String payload, HttpServletRequest request) {
+        String clientIp = request.getRemoteAddr();
+
+        if (analyticsService.isIpBlocked(clientIp)) {
+            System.out.println("⛔ גישה נחסמה מכתובת: " + clientIp + " (Endpoint: /checkout)");
+            return createBlockedResponse();
+        }
+
+        System.out.println("💳 בקשת תשלום הגיעה ל-/api/checkout מ-" + clientIp);
+        saveLog(request, payload, 200);
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Checkout process started",
+                "transactionId", "TXN-" + System.currentTimeMillis()
+        ));
+    }
+
+    private ResponseEntity<Map<String, Object>> createBlockedResponse() {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of(
+                        "error", "Access Denied",
+                        "reason", "IP Blocked by Defense System",
+                        "status", 403
+                ));
+    }
+
+    /**
      * מתודת עזר ליצירת ישות הלוג ושמירתה ב-PostgreSQL
      */
-    private void saveLog(HttpServletRequest request, String payload) {
+    private void saveLog(HttpServletRequest request, String payload, int status) {
         try {
             AttackLog log = new AttackLog();
             log.setClientIp(request.getRemoteAddr());
@@ -69,8 +140,7 @@ public class TargetController {
             log.setEndpoint(request.getRequestURI());
             log.setPayload(payload != null ? payload : "No payload");
             log.setTimestamp(LocalDateTime.now());
-            log.setResponseStatus(200);
-
+            log.setResponseStatus(status);
             attackLogRepository.save(log);
             System.out.println("✅ התקפה נרשמה בהצלחה. מזהה: " + log.getId());
         } catch (Exception e) {
