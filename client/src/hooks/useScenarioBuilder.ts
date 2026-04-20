@@ -1,13 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+// יצירת מערך עוגנים (Marks) למחוון ה-RPS כדי לחייב קפיצות של 1, 5, 10...
+const rpsMarks = [{ value: 1, label: '1' }];
+for (let i = 5; i <= 100; i += 5) {
+  rpsMarks.push({ value: i, label: i % 20 === 0 ? i.toString() : undefined });
+}
 
 // הגדרת סוגי ההתקפה המורחבת (5 סוגים)
 export const ATTACK_TYPES = {
   'Brute Force': {
     description: 'Testing protection against credential guessing (e.g., trying 1000 passwords).',
     fields: [
-      { id: 'rps', label: 'Requests per Second (RPS)', type: 'number', helper: 'Max simultaneous login attempts per second.' },
-      { id: 'duration', label: 'Duration (Seconds)', type: 'number', helper: 'How long the attack should run.' },
+      { id: 'rps', label: 'Requests per Second (RPS)', type: 'slider', min: 1, max: 100, step: null, marks: rpsMarks, helper: 'Max simultaneous login attempts per second.' },
+      { id: 'duration', label: 'Duration (Seconds)', type: 'slider', min: 5, max: 120, step: 5, helper: 'How long the attack should run.' },
       { id: 'payload', label: 'Payload', type: 'text', helper: 'Base payload for login, e.g., user=admin.' },
     ],
   },
@@ -59,7 +64,8 @@ const mapToBackendType = (type: AttackTypeKey): string => {
 export interface AttackScenario {
   id: number;
   name: string;
-  type: string; // The backend returns string, we might need mapping
+  type?: string;
+  attackType?: { name: string; severity?: string };
   params: { [key: string]: any };
   createdBy: any;
   lastRun: string;
@@ -116,12 +122,12 @@ export const useScenarioBuilder = () => {
 
     setIsSaving(true);
     try {
-      // Check if updating or creating
-      const url = editingId ? `http://localhost:8080/api/scenarios/${editingId}` : 'http://localhost:8080/api/scenarios';
-      const method = editingId ? 'PUT' : 'POST';
+      const url = editingId
+          ? `http://localhost:8080/api/scenarios/${editingId}`
+          : 'http://localhost:8080/api/scenarios';
 
       const response = await fetch(url, {
-        method,
+        method: editingId ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -138,7 +144,7 @@ export const useScenarioBuilder = () => {
         setFormParams({});
         setEditingId(null);
         fetchScenarios(); // Refresh list
-        alert(editingId ? `Scenario updated successfully!` : `Scenario saved successfully!`);
+        alert(`Scenario ${editingId ? 'updated' : 'saved'} successfully!`);
       } else {
         const err = await response.json();
         alert(`Failed to save: ${err.message || 'Unknown error'}`);
@@ -148,48 +154,6 @@ export const useScenarioBuilder = () => {
       alert("Network error while saving scenario.");
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const handleEditScenario = (scenario: AttackScenario) => {
-    setEditingId(scenario.id);
-    setScenarioName(scenario.name);
-
-    // Reverse map from backend type to UI key
-    const typeKey = (Object.keys(ATTACK_TYPES) as AttackTypeKey[]).find(
-        key => mapToBackendType(key) === scenario.type
-    );
-    if (typeKey) {
-      setSelectedAttackType(typeKey);
-    }
-
-    setFormParams(scenario.params || {});
-
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleDeleteScenario = async (id: number) => {
-    if (!token) return;
-    if (!window.confirm("Are you sure you want to delete this scenario?")) return;
-
-    try {
-      const response = await fetch(`http://localhost:8080/api/scenarios/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        alert("Scenario deleted successfully!");
-        fetchScenarios();
-      } else {
-        alert("Failed to delete scenario.");
-      }
-    } catch (error) {
-      console.error("Error deleting:", error);
-      alert("Network error while deleting scenario.");
     }
   };
 
@@ -216,6 +180,45 @@ export const useScenarioBuilder = () => {
     }
   };
 
+  const handleEditScenario = (scenario: AttackScenario) => {
+    setEditingId(scenario.id);
+    setScenarioName(scenario.name);
+
+    // איתור סוג התקיפה מתוך מאגר המידע
+    const typeName = scenario.attackType?.name || scenario.type;
+    const typeKey = (Object.keys(ATTACK_TYPES) as AttackTypeKey[]).find(
+        key => mapToBackendType(key) === typeName
+    );
+
+    setSelectedAttackType(typeKey || 'Brute Force');
+    setFormParams(scenario.params || {});
+  };
+
+  const handleDeleteScenario = async (id: number) => {
+    if (!token || !window.confirm("Are you sure you want to delete this scenario?")) return;
+    try {
+      const response = await fetch(`http://localhost:8080/api/scenarios/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        fetchScenarios();
+      } else {
+        alert("Failed to delete scenario.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Network error during deletion.");
+    }
+  };
+
+  const clearEditMode = () => {
+    setEditingId(null);
+    setScenarioName('');
+    setFormParams({});
+    setSelectedAttackType('Brute Force');
+  };
+
   return {
     scenarios,
     selectedAttackType,
@@ -230,6 +233,7 @@ export const useScenarioBuilder = () => {
     handleSaveScenario,
     handleRunScenario,
     handleEditScenario,
-    handleDeleteScenario
+    handleDeleteScenario,
+    clearEditMode
   };
 };

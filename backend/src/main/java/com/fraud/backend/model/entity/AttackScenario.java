@@ -22,8 +22,10 @@ public class AttackScenario {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
-    private String type; // Brute Force, SQL Injection, וכו'
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "attack_type_id", nullable = true)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private AttackType attackType;
 
     // הקשר ליוזר שיצר את התרחיש (ForeignKey)
     @ManyToOne(fetch = FetchType.LAZY)

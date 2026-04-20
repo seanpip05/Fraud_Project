@@ -69,12 +69,12 @@ export const ScenariosList: React.FC<ScenariosListProps> = ({
                   </TableCell>
                   <TableCell>
                     <Chip
-                        label={scenario.type}
+                        label={scenario.attackType?.name || scenario.type || "UNKNOWN"}
                         size="small"
                         color={
-                          scenario.type === "BRUTE_FORCE"
+                          (scenario.attackType?.name || scenario.type) === "BRUTE_FORCE"
                               ? "error"
-                              : scenario.type === "SQL_INJECTION"
+                              : (scenario.attackType?.name || scenario.type) === "SQL_INJECTION"
                                   ? "warning"
                                   : "info"
                         }
