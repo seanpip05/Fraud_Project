@@ -3,8 +3,10 @@ package com.fraud.backend.controller;
 import com.fraud.backend.model.dto.CreateScenarioDTO;
 import com.fraud.backend.model.entity.AttackScenario;
 import com.fraud.backend.model.entity.User;
+import com.fraud.backend.model.entity.AttackType;
 import com.fraud.backend.repository.AttackScenarioRepository;
 import com.fraud.backend.repository.UserRepository;
+import com.fraud.backend.repository.AttackTypeRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -19,10 +21,12 @@ public class ScenarioController {
 
     private final AttackScenarioRepository scenarioRepository;
     private final UserRepository userRepository;
+    private final AttackTypeRepository attackTypeRepository;
 
-    public ScenarioController(AttackScenarioRepository scenarioRepository, UserRepository userRepository) {
+    public ScenarioController(AttackScenarioRepository scenarioRepository, UserRepository userRepository, AttackTypeRepository attackTypeRepository) {
         this.scenarioRepository = scenarioRepository;
         this.userRepository = userRepository;
+        this.attackTypeRepository = attackTypeRepository;
     }
 
     // 1. POST /api/scenarios: יצירת תרחיש חדש
@@ -42,7 +46,19 @@ public class ScenarioController {
         // 2. יצירת Entity חדש
         AttackScenario scenario = new AttackScenario();
         scenario.setName(dto.getName());
-        scenario.setType(dto.getType());
+
+        Optional<AttackType> attackTypeOpt = attackTypeRepository.findByName(dto.getType());
+        AttackType attackType;
+        if (attackTypeOpt.isEmpty()) {
+            attackType = new AttackType();
+            attackType.setName(dto.getType());
+            attackType.setSeverity(AttackType.Severity.MEDIUM);
+            attackType = attackTypeRepository.save(attackType);
+        } else {
+            attackType = attackTypeOpt.get();
+        }
+        scenario.setAttackType(attackType);
+
         scenario.setParams(dto.getParams()); // ה-JSONB נשמר כאן
         scenario.setCreatedBy(currentUser);
         scenario.setCreatedAt(LocalDateTime.now());
@@ -75,7 +91,19 @@ public class ScenarioController {
 
         AttackScenario scenario = scenarioOptional.get();
         scenario.setName(dto.getName());
-        scenario.setType(dto.getType());
+
+        Optional<AttackType> attackTypeOpt = attackTypeRepository.findByName(dto.getType());
+        AttackType attackType;
+        if (attackTypeOpt.isEmpty()) {
+            attackType = new AttackType();
+            attackType.setName(dto.getType());
+            attackType.setSeverity(AttackType.Severity.MEDIUM);
+            attackType = attackTypeRepository.save(attackType);
+        } else {
+            attackType = attackTypeOpt.get();
+        }
+        scenario.setAttackType(attackType);
+
         scenario.setParams(dto.getParams());
 
         AttackScenario updatedScenario = scenarioRepository.save(scenario);

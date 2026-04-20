@@ -37,6 +37,7 @@ public class TargetController {
 
         if (analyticsService.isIpBlocked(clientIp)) {
             System.out.println("⛔ גישה נחסמה מכתובת: " + clientIp + " (Endpoint: /target)");
+            saveLog(request, body != null ? body : "No payload", 403);
             return createBlockedResponse();
         }
 
@@ -59,6 +60,7 @@ public class TargetController {
 
         if (analyticsService.isIpBlocked(clientIp)) {
             System.out.println("⛔ גישה נחסמה מכתובת: " + clientIp + " (Endpoint: /login)");
+            saveLog(request, creds != null ? creds.toString() : "No payload", 403);
             return createBlockedResponse();
         }
 
@@ -86,6 +88,7 @@ public class TargetController {
 
         if (analyticsService.isIpBlocked(clientIp)) {
             System.out.println("⛔ גישה נחסמה מכתובת: " + clientIp + " (Endpoint: /products)");
+            saveLog(request, "Query: " + query, 403);
             return createBlockedResponse();
         }
 
@@ -108,6 +111,7 @@ public class TargetController {
 
         if (analyticsService.isIpBlocked(clientIp)) {
             System.out.println("⛔ גישה נחסמה מכתובת: " + clientIp + " (Endpoint: /checkout)");
+            saveLog(request, payload != null ? payload : "No payload", 403);
             return createBlockedResponse();
         }
 
@@ -141,6 +145,7 @@ public class TargetController {
             log.setPayload(payload != null ? payload : "No payload");
             log.setTimestamp(LocalDateTime.now());
             log.setResponseStatus(status);
+
             attackLogRepository.save(log);
             System.out.println("✅ התקפה נרשמה בהצלחה. מזהה: " + log.getId());
         } catch (Exception e) {

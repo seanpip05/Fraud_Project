@@ -123,7 +123,7 @@ export const VictimMonitorView: React.FC = () => {
         {/* Header Section */}
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 4, alignItems: 'center' }}>
           <Box>
-            <Typography variant="h4" sx={{ color: "#0f172a", fontWeight: 800, letterSpacing: -1 }}>
+            <Typography variant="h4" sx={{ color: "#1a3b89", fontWeight: 800, letterSpacing: -1 }}>
               Cyber Defense Command
             </Typography>
             <Typography variant="body2" color="text.secondary">

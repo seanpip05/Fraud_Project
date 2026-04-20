@@ -50,7 +50,8 @@ public class AttackGenerator {
 
             // יצירת משימת התקיפה המחזורית
             ScheduledFuture<?> attackTask = scheduler.scheduleAtFixedRate(() -> {
-                executeSingleRequest(targetUrl, scenario.getType(), params);
+                String attackTypeName = scenario.getAttackType() != null ? scenario.getAttackType().getName() : "UNKNOWN";
+                executeSingleRequest(targetUrl, attackTypeName, params);
             }, 0, delayMicros, TimeUnit.MICROSECONDS);
 
             activeTasks.put(scenario.getId(), attackTask);
