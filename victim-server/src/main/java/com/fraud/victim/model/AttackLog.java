@@ -31,4 +31,8 @@ public class AttackLog {
 
     // סטטוס התגובה (למשל 200 אם הצליח, 403 אם נחסם על ידי חוק הגנה)
     private int responseStatus;
+
+    // ציון סיכון דינמי
+    @Column(columnDefinition = "Integer default 0")
+    private Integer riskScore;
 }

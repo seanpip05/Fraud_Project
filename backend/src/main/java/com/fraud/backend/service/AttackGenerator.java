@@ -87,11 +87,13 @@ public class AttackGenerator {
                     .timeout(Duration.ofSeconds(2));
 
             if ("BRUTE_FORCE".equals(type)) {
-                String basePayload = (params != null && params.get("payload") != null)
+                String dynamicPayload = (params != null && params.get("payload") != null)
                         ? params.get("payload").toString() : "user=admin";
 
-                // יצירת פיילוד דינמי לזיהוי דפוסים
-                String dynamicPayload = basePayload + "&attempt=" + random.nextInt(1000);
+                // מחליף את תגית הרנדום מתוך ה-UI במספר דינמי ליצירת תבניות שונות
+                if (dynamicPayload.contains("{{RANDOM}}")) {
+                    dynamicPayload = dynamicPayload.replace("{{RANDOM}}", String.valueOf(random.nextInt(10000)));
+                }
 
                 requestBuilder.POST(HttpRequest.BodyPublishers.ofString(dynamicPayload))
                         .header("Content-Type", "application/x-www-form-urlencoded");
