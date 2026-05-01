@@ -96,6 +96,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(req -> req
                         // שימוש ב-Wildcard כדי לפתוח את כל מה שתחת auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        // מתן גישה חופשית למשיכת חוקים עבור Victim Server
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/rules").permitAll()
                         // פתיחת גישה ל-Console של H2 אם אתה משתמש בו
                         .requestMatchers("/h2-console/**").permitAll()
                         // כל שאר הנתיבים דורשים הזדהות

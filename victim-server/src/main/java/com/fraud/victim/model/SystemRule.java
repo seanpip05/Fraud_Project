@@ -1,4 +1,4 @@
-package com.fraud.backend.model.entity;
+package com.fraud.victim.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -28,7 +28,7 @@ public class SystemRule {
     @Column(nullable = false)
     private String action = "BLOCK";
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER) // Using EAGER here because we cache it and avoid LazyInitializationException
     @JoinColumn(name = "attack_type_id", nullable = false)
     private AttackType attackType;
 }

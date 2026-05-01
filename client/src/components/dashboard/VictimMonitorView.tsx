@@ -27,12 +27,14 @@ import GppBadIcon from "@mui/icons-material/GppBad";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import BlockIcon from "@mui/icons-material/Block";
 import TimelineIcon from "@mui/icons-material/Timeline";
+import WarningIcon from "@mui/icons-material/Warning";
 
 // Interface for server statistics
 interface VictimStats {
   totalAttacks: number;
   attacksLastMinute: number;
   blockedIpsCount: number;
+  currentRiskScore: number;
 }
 
 // Interface for chart data points
@@ -47,6 +49,7 @@ export const VictimMonitorView: React.FC = () => {
     totalAttacks: 0,
     attacksLastMinute: 0,
     blockedIpsCount: 0,
+    currentRiskScore: 0,
   });
   const [blacklist, setBlacklist] = useState<string[]>([]);
   const [chartHistory, setChartHistory] = useState<ChartData[]>([]);
@@ -123,7 +126,7 @@ export const VictimMonitorView: React.FC = () => {
         {/* Header Section */}
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 4, alignItems: 'center' }}>
           <Box>
-            <Typography variant="h4" sx={{ color: "#1a3b89", fontWeight: 800, letterSpacing: -1 }}>
+            <Typography variant="h4" sx={{ color: "#1A3B89", fontWeight: 800, letterSpacing: -1 }}>
               Cyber Defense Command
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -139,14 +142,31 @@ export const VictimMonitorView: React.FC = () => {
 
         {/* Summary Statistics Cards */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <StatCard title="Total Incidents" value={stats.totalAttacks} icon={<GppBadIcon />} color="#ef4444" />
           </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <StatCard title="Active Threats (1m)" value={stats.attacksLastMinute} icon={<SecurityIcon />} color="#f59e0b" />
           </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <StatCard title="Shielded IPs" value={stats.blockedIpsCount} icon={<ShieldIcon />} color="#10b981" />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Card sx={{ borderRadius: 4, borderLeft: `6px solid ${stats.currentRiskScore > 70 ? '#ef4444' : stats.currentRiskScore > 30 ? '#f59e0b' : '#10b981'}`, boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
+              <CardContent sx={{ display: "flex", alignItems: "center", gap: 2, py: '20px !important' }}>
+                <Box sx={{ p: 1.5, backgroundColor: `${stats.currentRiskScore > 70 ? '#ef4444' : stats.currentRiskScore > 30 ? '#f59e0b' : '#10b981'}15`, borderRadius: 3, color: stats.currentRiskScore > 70 ? '#ef4444' : stats.currentRiskScore > 30 ? '#f59e0b' : '#10b981' }}>
+                  <WarningIcon fontSize="medium" />
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="textSecondary" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    Threat Level
+                  </Typography>
+                  <Typography variant="h5" sx={{ fontWeight: 800, color: '#6b8bd5' }}>
+                    {Math.round(stats.currentRiskScore || 0)} / 100
+                  </Typography>
+                </Box>
+              </CardContent>
+            </Card>
           </Grid>
         </Grid>
 

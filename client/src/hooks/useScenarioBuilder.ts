@@ -13,7 +13,7 @@ export const ATTACK_TYPES = {
     fields: [
       { id: 'rps', label: 'Requests per Second (RPS)', type: 'slider', min: 1, max: 100, step: null, marks: rpsMarks, helper: 'Max simultaneous login attempts per second.' },
       { id: 'duration', label: 'Duration (Seconds)', type: 'slider', min: 5, max: 120, step: 5, helper: 'How long the attack should run.' },
-      { id: 'payload', label: 'Payload', type: 'text', helper: 'Base payload for login, e.g., user=admin.' },
+      { id: 'payload', label: 'Payload', type: 'text', helper: 'Use {{RANDOM}} to inject dynamic random numbers (e.g., user=admin&pass={{RANDOM}})' },
     ],
   },
   'SQL Injection': {
