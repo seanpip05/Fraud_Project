@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { Box, Typography } from "@mui/material";
 import { useScenarioBuilder } from "../hooks/useScenarioBuilder";
 import { ScenarioForm } from "../components/scenarios/ScenarioForm";
 import { ScenariosList } from "../components/scenarios/ScenariosList";
+import { ConfirmDialog } from "../components/shared/ConfirmDialog";
 
 // מבנה נתונים חדש להסברים מפורטים (לפי סוג התקיפה)
 // מכיל הסבר כללי ופירוט לכל Input
@@ -26,6 +27,23 @@ const ScenariosPage: React.FC = () => {
         handleDeleteScenario,
         clearEditMode
     } = useScenarioBuilder();
+
+    // State for delete confirmation dialog
+    const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: number | null; name: string }>({
+        open: false, id: null, name: ""
+    });
+
+    const handleDeleteClick = (id: number) => {
+        const scenario = scenarios.find(s => s.id === id);
+        setDeleteConfirm({ open: true, id, name: scenario?.name || `Scenario #${id}` });
+    };
+
+    const handleDeleteConfirm = () => {
+        if (deleteConfirm.id !== null) {
+            handleDeleteScenario(deleteConfirm.id);
+        }
+        setDeleteConfirm({ open: false, id: null, name: "" });
+    };
 
     return (
         <Box sx={{ p: 4 }}>
@@ -76,9 +94,20 @@ const ScenariosPage: React.FC = () => {
                     scenarios={scenarios}
                     onRunScenario={handleRunScenario}
                     onEditScenario={handleEditScenario}
-                    onDeleteScenario={handleDeleteScenario}
+                    onDeleteScenario={handleDeleteClick}
                 />
             )}
+
+            {/* Confirm Dialog for Scenario Deletion */}
+            <ConfirmDialog
+                open={deleteConfirm.open}
+                title="Delete Attack Scenario?"
+                message={`Are you sure you want to permanently delete the scenario "${deleteConfirm.name}"? All associated configuration will be lost.`}
+                confirmLabel="Delete Scenario"
+                confirmColor="error"
+                onConfirm={handleDeleteConfirm}
+                onCancel={() => setDeleteConfirm({ open: false, id: null, name: "" })}
+            />
         </Box>
     );
 };

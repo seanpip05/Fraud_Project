@@ -35,12 +35,12 @@ public class TargetController {
     public ResponseEntity<?> generalTarget(@RequestBody(required = false) String body, HttpServletRequest request) {
         String clientIp = request.getRemoteAddr();
         String payload = body != null ? body : "No payload";
-        int riskScore = analyticsService.evaluateRiskAndBlock(clientIp, payload, "/api/target");
+        AnalyticsService.RiskEvaluationResult evaluation = analyticsService.evaluateRiskAndBlock(clientIp, payload, "/api/target");
+        int riskScore = evaluation.getScore();
 
-        if (riskScore >= 100 || analyticsService.isIpBlocked(clientIp)) {
+        if (riskScore >= 100) {
             System.out.println("⛔ גישה נחסמה מכתובת: " + clientIp + " (Endpoint: /target)");
-            saveLog(request, payload, 403, riskScore);
-            return createBlockedResponse();
+            return handleBlockedRequest(request, payload, riskScore, evaluation.getReason());
         }
 
         System.out.println("📥 בקשה התקבלה מ-" + clientIp + " בנתיב /api/target");
@@ -60,12 +60,12 @@ public class TargetController {
     public ResponseEntity<?> loginTarget(@RequestBody(required = false) Map<String, String> creds, HttpServletRequest request) {
         String clientIp = request.getRemoteAddr();
         String payload = creds != null ? creds.toString() : "No payload";
-        int riskScore = analyticsService.evaluateRiskAndBlock(clientIp, payload, "/api/login");
+        AnalyticsService.RiskEvaluationResult evaluation = analyticsService.evaluateRiskAndBlock(clientIp, payload, "/api/login");
+        int riskScore = evaluation.getScore();
 
-        if (riskScore >= 100 || analyticsService.isIpBlocked(clientIp)) {
+        if (riskScore >= 100) {
             System.out.println("⛔ גישה נחסמה מכתובת: " + clientIp + " (Endpoint: /login)");
-            saveLog(request, payload, 403, riskScore);
-            return createBlockedResponse();
+            return handleBlockedRequest(request, payload, riskScore, evaluation.getReason());
         }
 
         System.out.println("🔐 הגיע ניסיון התחברות ל-/api/login מ-" + clientIp);
@@ -90,12 +90,12 @@ public class TargetController {
     public ResponseEntity<?> productsTarget(@RequestParam(required = false) String query, HttpServletRequest request) {
         String clientIp = request.getRemoteAddr();
         String payload = query != null ? query : "No query";
-        int riskScore = analyticsService.evaluateRiskAndBlock(clientIp, payload, "/api/products");
+        AnalyticsService.RiskEvaluationResult evaluation = analyticsService.evaluateRiskAndBlock(clientIp, payload, "/api/products");
+        int riskScore = evaluation.getScore();
 
-        if (riskScore >= 100 || analyticsService.isIpBlocked(clientIp)) {
+        if (riskScore >= 100) {
             System.out.println("⛔ גישה נחסמה מכתובת: " + clientIp + " (Endpoint: /products)");
-            saveLog(request, "Query: " + payload, 403, riskScore);
-            return createBlockedResponse();
+            return handleBlockedRequest(request, "Query: " + payload, riskScore, evaluation.getReason());
         }
 
         System.out.println("📦 בקשה לחיפוש מוצרים הגיעה ל-/api/products מ-" + clientIp);
@@ -115,12 +115,12 @@ public class TargetController {
     public ResponseEntity<?> checkoutTarget(@RequestBody(required = false) String payload, HttpServletRequest request) {
         String clientIp = request.getRemoteAddr();
         String payloadStr = payload != null ? payload : "No payload";
-        int riskScore = analyticsService.evaluateRiskAndBlock(clientIp, payloadStr, "/api/checkout");
+        AnalyticsService.RiskEvaluationResult evaluation = analyticsService.evaluateRiskAndBlock(clientIp, payloadStr, "/api/checkout");
+        int riskScore = evaluation.getScore();
 
-        if (riskScore >= 100 || analyticsService.isIpBlocked(clientIp)) {
+        if (riskScore >= 100) {
             System.out.println("⛔ גישה נחסמה מכתובת: " + clientIp + " (Endpoint: /checkout)");
-            saveLog(request, payloadStr, 403, riskScore);
-            return createBlockedResponse();
+            return handleBlockedRequest(request, payloadStr, riskScore, evaluation.getReason());
         }
 
         System.out.println("💳 בקשת תשלום הגיעה ל-/api/checkout מ-" + clientIp);
@@ -132,12 +132,29 @@ public class TargetController {
         ));
     }
 
-    private ResponseEntity<Map<String, Object>> createBlockedResponse() {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+    private ResponseEntity<Map<String, Object>> handleBlockedRequest(HttpServletRequest request, String payload, int riskScore, String reason) {
+        HttpStatus status = HttpStatus.FORBIDDEN; // Default 403
+        String errorMsg = "Access Denied";
+
+        if (reason != null) {
+            if (reason.contains("BRUTE_FORCE") || reason.contains("FLOOD") || reason.contains("LOGIC_FLAW")) {
+                status = HttpStatus.TOO_MANY_REQUESTS; // 429
+                errorMsg = "Too Many Requests - Rate Limit Exceeded";
+            } else if (reason.contains("SQL_INJECTION") || reason.contains("XSS") || reason.contains("TAMPERING")) {
+                status = HttpStatus.BAD_REQUEST; // 400
+                errorMsg = "Bad Request - Malicious Payload Detected";
+            }
+        }
+
+        saveLog(request, payload, status.value(), riskScore);
+
+        System.out.println("🛑 Returning HTTP " + status.value() + " (" + status.getReasonPhrase() + ") to attacker.");
+
+        return ResponseEntity.status(status)
                 .body(Map.of(
-                        "error", "Access Denied",
-                        "reason", "IP Blocked by Defense System",
-                        "status", 403
+                        "error", errorMsg,
+                        "reason", "IP Blocked by Defense System: " + reason,
+                        "status", status.value()
                 ));
     }
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useSnackbar } from '../context/SnackbarContext';
 
 export interface SystemRule {
   id: number;
@@ -13,6 +14,7 @@ export interface SystemRule {
 
 export const useRulesManagement = () => {
   const { token } = useAuth();
+  const { showSuccess, showError } = useSnackbar();
   const [rules, setRules] = useState<SystemRule[]>([]);
   const [originalRules, setOriginalRules] = useState<SystemRule[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -71,11 +73,11 @@ export const useRulesManagement = () => {
           body: JSON.stringify(rule)
         });
       }
-      alert('Changes saved successfully to the system!');
+      showSuccess('Changes saved successfully to the system!');
       fetchRules(); // Refresh
     } catch (error) {
       console.error("Error saving rules:", error);
-      alert('Failed to save changes.');
+      showError('Failed to save changes.');
     } finally {
       setIsLoading(false);
     }
@@ -97,11 +99,11 @@ export const useRulesManagement = () => {
         fetchRules();
       } else {
         const err = await response.json();
-        alert(`Failed to create rule: ${err.message || 'Unknown error'}`);
+        showError(`Failed to create rule: ${err.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error("Error creating rule:", error);
-      alert('Network error while creating rule.');
+      showError('Network error while creating rule.');
     } finally {
       setIsLoading(false);
     }
@@ -123,11 +125,11 @@ export const useRulesManagement = () => {
         fetchRules();
       } else {
         const err = await response.json();
-        alert(`Failed to update rule: ${err.message || 'Unknown error'}`);
+        showError(`Failed to update rule: ${err.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error("Error updating rule:", error);
-      alert('Network error while updating rule.');
+      showError('Network error while updating rule.');
     } finally {
       setIsLoading(false);
     }
@@ -144,11 +146,11 @@ export const useRulesManagement = () => {
       if (response.ok) {
         fetchRules();
       } else {
-        alert("Failed to delete rule.");
+        showError('Failed to delete rule.');
       }
     } catch (error) {
       console.error("Error deleting rule:", error);
-      alert('Network error while deleting rule.');
+      showError('Network error while deleting rule.');
     } finally {
       setIsLoading(false);
     }

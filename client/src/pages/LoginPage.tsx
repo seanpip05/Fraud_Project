@@ -46,8 +46,22 @@ export const LoginPage: React.FC = () => {
       if (response.ok && data.token) {
         login(data.token); // קריאה ל-AuthContext לעדכון המצב עם הטוקן
         console.log("Login Successful!");
+      } else if (response.status === 429) {
+        // Lockout or Rate Limiting
+        if (data.locked) {
+          setError(`🔒 Account locked! Too many failed attempts. Try again in ${data.retryAfterMinutes} minute(s).`);
+        } else if (data.retryAfterMinutes) {
+          setError(`🔒 Account locked. Please wait ${data.retryAfterMinutes} minute(s).`);
+        } else {
+          setError(data.error || "Too many requests. Please slow down.");
+        }
       } else {
-        setError(data.error || "Invalid credentials.");
+        const remaining = data.remainingAttempts;
+        const msg = data.error || "Invalid credentials.";
+        setError(remaining !== undefined
+            ? `${msg} (${remaining} attempt${remaining !== 1 ? 's' : ''} remaining)`
+            : msg
+        );
       }
     } catch (err) {
       console.error("Login failure", err);
