@@ -1,9 +1,12 @@
 package com.fraud.victim.controller;
 
+import com.fraud.victim.model.AttackLog;
+import com.fraud.victim.repository.AttackLogRepository;
 import com.fraud.victim.service.AnalyticsService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -13,9 +16,11 @@ import java.util.Set;
 public class AnalyticsController {
 
     private final AnalyticsService analyticsService;
+    private final AttackLogRepository attackLogRepository;
 
-    public AnalyticsController(AnalyticsService analyticsService) {
+    public AnalyticsController(AnalyticsService analyticsService, AttackLogRepository attackLogRepository) {
         this.analyticsService = analyticsService;
+        this.attackLogRepository = attackLogRepository;
     }
 
     @GetMapping("/stats")
@@ -26,6 +31,16 @@ public class AnalyticsController {
     @GetMapping("/blacklist")
     public ResponseEntity<Set<String>> getBlacklist() {
         return ResponseEntity.ok(analyticsService.getBlacklist());
+    }
+
+    /**
+     * שליפת כל לוגי ההתקפות מהמסד עבור עמוד הדוחות.
+     * ממוינים לפי זמן (החדש ביותר קודם).
+     */
+    @GetMapping("/logs")
+    public ResponseEntity<List<AttackLog>> getAllLogs() {
+        List<AttackLog> logs = attackLogRepository.findAllByOrderByTimestampDesc();
+        return ResponseEntity.ok(logs);
     }
 
     @PostMapping("/block")

@@ -24,6 +24,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import type { SystemRule } from "../../hooks/useRulesManagement";
+import { ConfirmDialog } from "../shared/ConfirmDialog";
 
 interface RulesTableProps {
   rules: SystemRule[];
@@ -103,10 +104,17 @@ export const RulesTable: React.FC<RulesTableProps> = ({
     handleCloseDialog();
   };
 
-  const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this rule?")) {
-      onDelete(id);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: number | null; name: string }>({ open: false, id: null, name: "" });
+
+  const handleDeleteClick = (id: number, name: string) => {
+    setDeleteConfirm({ open: true, id, name });
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deleteConfirm.id !== null) {
+      onDelete(deleteConfirm.id);
     }
+    setDeleteConfirm({ open: false, id: null, name: "" });
   };
 
   return (
@@ -216,7 +224,7 @@ export const RulesTable: React.FC<RulesTableProps> = ({
                       <IconButton color="primary" onClick={() => handleOpenDialog(rule)}>
                         <EditIcon />
                       </IconButton>
-                      <IconButton color="error" onClick={() => handleDelete(rule.id)}>
+                      <IconButton color="error" onClick={() => handleDeleteClick(rule.id, rule.name)}>
                         <DeleteIcon />
                       </IconButton>
                     </TableCell>
@@ -315,6 +323,17 @@ export const RulesTable: React.FC<RulesTableProps> = ({
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* Confirm Dialog for Delete */}
+        <ConfirmDialog
+            open={deleteConfirm.open}
+            title="Delete Security Rule?"
+            message={`Are you sure you want to permanently delete the rule "${deleteConfirm.name}"? This action cannot be undone.`}
+            confirmLabel="Delete Rule"
+            confirmColor="error"
+            onConfirm={handleDeleteConfirm}
+            onCancel={() => setDeleteConfirm({ open: false, id: null, name: '' })}
+        />
       </Box>
   );
 };

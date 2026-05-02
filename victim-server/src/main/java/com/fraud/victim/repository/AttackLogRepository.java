@@ -22,4 +22,7 @@ public interface AttackLogRepository extends JpaRepository<AttackLog, Long> {
     // שליפת ה-IPs הכי פעילים (לזיהוי תוקפים מרכזיים)
     @Query("SELECT a.clientIp, COUNT(a) as total FROM AttackLog a GROUP BY a.clientIp ORDER BY total DESC")
     List<Object[]> findTopAttackingIps();
+
+    // שליפת כל הלוגים ממוינים לפי זמן (עבור עמוד הדוחות)
+    List<AttackLog> findAllByOrderByTimestampDesc();
 }

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useSnackbar } from '../context/SnackbarContext';
 // יצירת מערך עוגנים (Marks) למחוון ה-RPS כדי לחייב קפיצות של 1, 5, 10...
 const rpsMarks = [{ value: 1, label: '1' }];
 for (let i = 5; i <= 100; i += 5) {
@@ -73,9 +75,11 @@ export interface AttackScenario {
 
 export const useScenarioBuilder = () => {
   const { token } = useAuth();
+  const { showSuccess, showError, showWarning } = useSnackbar();
+  const navigate = useNavigate();
   const [selectedAttackType, setSelectedAttackType] = useState<AttackTypeKey>('Brute Force');
   const [scenarioName, setScenarioName] = useState('');
-  const [formParams, setFormParams] = useState<{ [key: string]: any }>({ rps: 10, duration: 30, payload: "user=admin" });
+  const [formParams, setFormParams] = useState<{ [key: string]: any }>({ rps: 10, duration: 30, payload: "user=admin&pass={{RANDOM}}" });
   const [scenarios, setScenarios] = useState<AttackScenario[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -116,7 +120,7 @@ export const useScenarioBuilder = () => {
 
   const handleSaveScenario = async () => {
     if (!scenarioName.trim() || !token) {
-      alert('Please enter a scenario name.');
+      showWarning('Please enter a scenario name.');
       return;
     }
 
@@ -144,14 +148,14 @@ export const useScenarioBuilder = () => {
         setFormParams({});
         setEditingId(null);
         fetchScenarios(); // Refresh list
-        alert(`Scenario ${editingId ? 'updated' : 'saved'} successfully!`);
+        showSuccess(`Scenario ${editingId ? 'updated' : 'saved'} successfully!`);
       } else {
         const err = await response.json();
-        alert(`Failed to save: ${err.message || 'Unknown error'}`);
+        showError(`Failed to save: ${err.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error("Error saving:", error);
-      alert("Network error while saving scenario.");
+      showError('Network error while saving scenario.');
     } finally {
       setIsSaving(false);
     }
@@ -168,15 +172,17 @@ export const useScenarioBuilder = () => {
       });
 
       if (response.ok) {
-        alert("Simulation started successfully!");
-        fetchScenarios(); // Refresh to update lastRun field
+        showSuccess('⚔️ Simulation started! Redirecting to Dashboard...');
+        fetchScenarios();
+        // ניווט אוטומטי לדשבורד כדי לראות את התקפה בזמן אמת
+        setTimeout(() => navigate('/'), 800);
       } else {
         const err = await response.json();
-        alert(`Failed to start: ${err.error || 'Unknown error'}`);
+        showError(`Failed to start: ${err.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error("Error running scenario:", error);
-      alert("Network error while starting simulation.");
+      showError('Network error while starting simulation.');
     }
   };
 
@@ -195,7 +201,7 @@ export const useScenarioBuilder = () => {
   };
 
   const handleDeleteScenario = async (id: number) => {
-    if (!token || !window.confirm("Are you sure you want to delete this scenario?")) return;
+    if (!token) return;
     try {
       const response = await fetch(`http://localhost:8080/api/scenarios/${id}`, {
         method: 'DELETE',
@@ -204,11 +210,11 @@ export const useScenarioBuilder = () => {
       if (response.ok) {
         fetchScenarios();
       } else {
-        alert("Failed to delete scenario.");
+        showError('Failed to delete scenario.');
       }
     } catch (e) {
       console.error(e);
-      alert("Network error during deletion.");
+      showError('Network error during deletion.');
     }
   };
 

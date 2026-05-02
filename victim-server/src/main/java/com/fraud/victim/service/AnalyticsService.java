@@ -66,11 +66,11 @@ public class AnalyticsService {
 
     /**
      * פונקציית העל לחישוב ציון סיכון דינמי.
-     * כעת משתמשת בחוקים החיים שנלקחו משרת ה-SOC!
+     * כעת משתמשת בחוקים החיים שנלקחו משרת ה-SOC ומחזירה גם סיבה לחסימה לצורך HTTP Code מדויק.
      */
-    public int evaluateRiskAndBlock(String ip, String payload, String endpoint) {
+    public RiskEvaluationResult evaluateRiskAndBlock(String ip, String payload, String endpoint) {
         if (isIpBlocked(ip))
-            return 100; // סירוב הרשאה מידי
+            return new RiskEvaluationResult(100, "MANUAL_BLOCK_OR_PREVIOUS"); // סירוב הרשאה מידי
 
         int score = 5; // ציון "רעש" כברירת מחדל
         long now = System.currentTimeMillis();
@@ -89,6 +89,8 @@ public class AnalyticsService {
             // לוג זמני לדיבאג
             // System.out.println("DEBUG: No active rules to evaluate.");
         }
+
+        String primaryReason = "NONE";
 
         for (RuleDTO rule : activeRules) {
             String attackType = rule.getAttackType();
@@ -123,9 +125,13 @@ public class AnalyticsService {
                 System.out.println("⚠️ Rule violated: " + rule.getRuleName() + " for IP: " + ip);
                 if ("BLOCK".equalsIgnoreCase(rule.getAction())) {
                     score = 100; // מקפיץ מידית לחסימה
+                    primaryReason = attackType.toUpperCase().replace(" ", "_");
                     break;
                 } else if ("ALERT".equalsIgnoreCase(rule.getAction())) {
                     score += 40; // מוסיף קנס אך לא בהכרח חוסם
+                    if (primaryReason.equals("NONE")) {
+                        primaryReason = attackType.toUpperCase().replace(" ", "_") + "_ALERT";
+                    }
                 }
             }
         }
@@ -138,12 +144,12 @@ public class AnalyticsService {
 
         // אכיפה
         if (finalScore >= 100) {
-            blockIp(ip, "Risk Engine: Defense System rules triggered immediate block.");
+            blockIp(ip, "Risk Engine: Defense System rules triggered immediate block. Reason: " + primaryReason);
             patternTrackers.remove(ip);
             requestTrackers.remove(ip);
         }
 
-        return finalScore;
+        return new RiskEvaluationResult(finalScore, primaryReason);
     }
 
     public Map<String, Object> getQuickStats() {
@@ -212,6 +218,19 @@ public class AnalyticsService {
             payloadTimestamps.entrySet().removeIf(entry -> currentTime - entry.getValue() > timeWindowMs);
             return payloadTimestamps.size();
         }
+    }
+
+    public static class RiskEvaluationResult {
+        private final int score;
+        private final String reason;
+
+        public RiskEvaluationResult(int score, String reason) {
+            this.score = score;
+            this.reason = reason;
+        }
+
+        public int getScore() { return score; }
+        public String getReason() { return reason; }
     }
 
     public static class RuleDTO {
