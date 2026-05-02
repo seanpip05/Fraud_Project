@@ -1,0 +1,58 @@
+# Root .gitignore for Fraud Simulation Project
+
+# --- Java / Spring Boot ---
+**/target/
+**/*.class
+**/*.jar
+**/*.war
+**/*.ear
+**/mvnw
+**/mvnw.cmd
+**/.mvn/wrapper/maven-wrapper.jar
+
+# --- Node / React ---
+**/node_modules/
+**/dist/
+**/build/
+.eslintcache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- IDEs ---
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+bin/
+obj/
+
+# --- Docker & DB ---
+.docker/
+**/data/
+init-db.sh.local
+
+# --- Logs & Temp ---
+*.log
+**/logs/
+maven_output.txt
+scenarios_error.txt
+test_results.txt
+
+# --- OS Specific ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Environment & Secrets ---
+.env
+.env.local
+*.properties.local
+# Ignore potential secret backups
+**/*.bak
+**/*.tmp
