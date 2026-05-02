@@ -103,4 +103,4 @@ This project was developed as a final thesis/capstone to demonstrate the integra
 
 ---
 
-**Developed with ❤️ by Sean Pipkin**
+**Developed by Sean Pipkin**
