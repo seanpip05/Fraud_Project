@@ -67,7 +67,7 @@ graph TD
 ### Installation & Run
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-user/fraud-project.git
+   git clone https://github.com/seanpip05/fraud-project.git
    cd fraud-project
    ```
 
