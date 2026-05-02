@@ -16,6 +16,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api")
+@CrossOrigin(origins = {"http://localhost", "http://localhost:5173"})
 public class TargetController {
 
     private final AttackLogRepository attackLogRepository;

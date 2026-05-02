@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSnackbar } from '../context/SnackbarContext';
+import { SOC_API_BASE } from '../config';
 // יצירת מערך עוגנים (Marks) למחוון ה-RPS כדי לחייב קפיצות של 1, 5, 10...
-const rpsMarks = [{ value: 1, label: '1' }];
+const rpsMarks: { value: number; label?: string }[] = [{ value: 1, label: '1' }];
+
 for (let i = 5; i <= 100; i += 5) {
   rpsMarks.push({ value: i, label: i % 20 === 0 ? i.toString() : undefined });
 }
@@ -90,7 +92,7 @@ export const useScenarioBuilder = () => {
     if (!token) return;
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:8080/api/scenarios', {
+      const response = await fetch(`${SOC_API_BASE}/scenarios`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -127,8 +129,8 @@ export const useScenarioBuilder = () => {
     setIsSaving(true);
     try {
       const url = editingId
-          ? `http://localhost:8080/api/scenarios/${editingId}`
-          : 'http://localhost:8080/api/scenarios';
+          ? `${SOC_API_BASE}/scenarios/${editingId}`
+          : `${SOC_API_BASE}/scenarios`;
 
       const response = await fetch(url, {
         method: editingId ? 'PUT' : 'POST',
@@ -164,7 +166,7 @@ export const useScenarioBuilder = () => {
   const handleRunScenario = async (id: number) => {
     if (!token) return;
     try {
-      const response = await fetch(`http://localhost:8080/api/simulations/run/${id}`, {
+      const response = await fetch(`${SOC_API_BASE}/simulations/run/${id}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -203,7 +205,7 @@ export const useScenarioBuilder = () => {
   const handleDeleteScenario = async (id: number) => {
     if (!token) return;
     try {
-      const response = await fetch(`http://localhost:8080/api/scenarios/${id}`, {
+      const response = await fetch(`${SOC_API_BASE}/scenarios/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

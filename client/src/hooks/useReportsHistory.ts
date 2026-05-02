@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { VICTIM_API_BASE } from '../config';
 
 // טיפוס לוג התקפה כפי שמגיע מה-API של שרת הקורבן
 export interface AttackLogEntry {
@@ -27,7 +28,7 @@ export interface AttackSession {
   logs: AttackLogEntry[];
 }
 
-const VICTIM_API = 'http://localhost:8081/api/analytics';
+const VICTIM_API = `${VICTIM_API_BASE}/analytics`;
 
 /**
  * קיבוץ לוגים ל"סשנים" (מתקפות).

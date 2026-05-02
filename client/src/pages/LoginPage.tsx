@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
 import { useAuth } from "../context/AuthContext";
 import { LoginForm } from "../components/auth/LoginForm";
+import { SOC_API_BASE } from "../config";
 
 const darkTheme = createTheme({
   palette: {
@@ -33,7 +34,7 @@ export const LoginPage: React.FC = () => {
     setError(null);
 
     try {
-      const response = await fetch("http://localhost:8080/api/auth/login", {
+      const response = await fetch(`${SOC_API_BASE}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -69,12 +70,12 @@ export const LoginPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+    };
 
-  return (
-      <ThemeProvider theme={darkTheme}>
-        <CssBaseline />
-        <LoginForm onLogin={handleLogin} isLoading={isLoading} error={error} />
-      </ThemeProvider>
-  );
-};
+    return (
+        <ThemeProvider theme={darkTheme}>
+          <CssBaseline />
+          <LoginForm onLogin={handleLogin} isLoading={isLoading} error={error} />
+        </ThemeProvider>
+    );
+  };
