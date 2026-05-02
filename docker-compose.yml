@@ -7,9 +7,8 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: R$$E#W@Q!
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_MULTIPLE_DATABASES: fraud_db,victim_db
-      TZ: Asia/Jerusalem
     ports:
       - "5433:5432"
     volumes:
@@ -35,12 +34,11 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/fraud_db
       SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: R$$E#W@Q!
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      APPLICATION_SECURITY_JWT_SECRET_KEY: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=
-      APPLICATION_SECURITY_JWT_EXPIRATION: 86400000
+      APPLICATION_SECURITY_JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      APPLICATION_SECURITY_JWT_EXPIRATION: ${JWT_EXPIRATION}
       VICTIM_URL: http://victim-server:8081
-      TZ: Asia/Jerusalem
     depends_on:
       postgres:
         condition: service_healthy
@@ -59,10 +57,9 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/victim_db
       SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: R$$E#W@Q!
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       BACKEND_URL: http://backend:8080
-      TZ: Asia/Jerusalem
     depends_on:
       postgres:
         condition: service_healthy
@@ -78,8 +75,6 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
-    environment:
-      TZ: Asia/Jerusalem
     depends_on:
       - backend
       - victim-server
