@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.web.client.RestTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDateTime;
@@ -28,6 +29,9 @@ public class AnalyticsService {
 
     private final Map<String, RequestCounter> requestTrackers = new ConcurrentHashMap<>();
     private final Map<String, PayloadTracker> patternTrackers = new ConcurrentHashMap<>();
+
+    @Value("${backend.url:http://localhost:8080}")
+    private String backendUrl;
 
     // רשימת החוקים שנטענת בזיכרון השרת כל 5 שניות משרת ה-SOC
     private List<RuleDTO> activeRules = new ArrayList<>();
@@ -50,7 +54,8 @@ public class AnalyticsService {
     @Scheduled(fixedRate = 5000)
     public void refreshRules() {
         try {
-            RuleDTO[] rulesArray = restTemplate.getForObject("http://localhost:8080/api/rules", RuleDTO[].class);
+            String url = backendUrl + "/api/rules";
+            RuleDTO[] rulesArray = restTemplate.getForObject(url, RuleDTO[].class);
             if (rulesArray != null) {
                 List<RuleDTO> allRules = Arrays.asList(rulesArray);
                 activeRules = allRules.stream()
@@ -69,8 +74,9 @@ public class AnalyticsService {
      * כעת משתמשת בחוקים החיים שנלקחו משרת ה-SOC ומחזירה גם סיבה לחסימה לצורך HTTP Code מדויק.
      */
     public RiskEvaluationResult evaluateRiskAndBlock(String ip, String payload, String endpoint) {
-        if (isIpBlocked(ip))
+        if (isIpBlocked(ip)) {
             return new RiskEvaluationResult(100, "MANUAL_BLOCK_OR_PREVIOUS"); // סירוב הרשאה מידי
+        }
 
         int score = 5; // ציון "רעש" כברירת מחדל
         long now = System.currentTimeMillis();

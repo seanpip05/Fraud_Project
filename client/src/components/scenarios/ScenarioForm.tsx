@@ -176,7 +176,7 @@ export const ScenarioForm: React.FC<ScenarioFormProps> = (props) => {
                           </Typography>
                           <Slider
                               value={typeof formParams[field.id] === 'number' ? formParams[field.id] : (field.min || 1)}
-                              onChange={(e, newValue) =>
+                              onChange={(_event, newValue) =>
                                   setFormParams({ ...formParams, [field.id]: newValue })
                               }
                               step={field.step !== undefined ? field.step : 1}

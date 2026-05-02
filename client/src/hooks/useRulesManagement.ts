@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSnackbar } from '../context/SnackbarContext';
+import { SOC_API_BASE } from '../config';
 
 export interface SystemRule {
   id: number;
@@ -23,7 +24,7 @@ export const useRulesManagement = () => {
     if (!token) return;
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:8080/api/rules', {
+      const response = await fetch(`${SOC_API_BASE}/rules`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
@@ -64,7 +65,7 @@ export const useRulesManagement = () => {
 
     try {
       for (const rule of modifiedRules) {
-        await fetch(`http://localhost:8080/api/rules/${rule.id}`, {
+        await fetch(`${SOC_API_BASE}/rules/${rule.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -87,7 +88,7 @@ export const useRulesManagement = () => {
     if (!token) return;
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:8080/api/rules', {
+      const response = await fetch(`${SOC_API_BASE}/rules`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -113,7 +114,7 @@ export const useRulesManagement = () => {
     if (!token) return;
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:8080/api/rules/${id}`, {
+      const response = await fetch(`${SOC_API_BASE}/rules/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -139,7 +140,7 @@ export const useRulesManagement = () => {
     if (!token) return;
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:8080/api/rules/${id}`, {
+      const response = await fetch(`${SOC_API_BASE}/rules/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

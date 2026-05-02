@@ -12,7 +12,7 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/api/analytics")
-@CrossOrigin(origins = "http://localhost:5173") // מאפשר ל-React לגשת למידע
+@CrossOrigin(origins = {"http://localhost", "http://localhost:5173"}) // מאפשר ל-React לגשת למידע
 public class AnalyticsController {
 
     private final AnalyticsService analyticsService;

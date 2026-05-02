@@ -31,6 +31,7 @@ import TimelineIcon from "@mui/icons-material/Timeline";
 import WarningIcon from "@mui/icons-material/Warning";
 import FeedIcon from "@mui/icons-material/RssFeed";
 import Chip from "@mui/material/Chip";
+import { VICTIM_API_BASE } from "../../config";
 
 // Interface for server statistics
 interface VictimStats {
@@ -72,7 +73,7 @@ export const VictimMonitorView: React.FC = () => {
     const [unblockConfirm, setUnblockConfirm] = useState<{ open: boolean; ip: string }>({ open: false, ip: "" });
     const [recentLogs, setRecentLogs] = useState<RecentLog[]>([]);
 
-    const API_BASE = "http://localhost:8081/api/analytics";
+    const API_BASE = `${VICTIM_API_BASE}/analytics`;
     const lastTotalRef = useRef(0);
 
     // Fetching data from the Victim Server (Server 2)
@@ -114,10 +115,9 @@ export const VictimMonitorView: React.FC = () => {
             if (!logsRes.ok) return;
             const logsData: RecentLog[] = await logsRes.json();
 
-            // רק לוגים מה-2 דקות האחרונות — מציגים את המתקפה הנוכחית בלבד
-            const twoMinutesAgo = Date.now() - 2 * 60 * 1000;
+            const oneHourAgo = Date.now() - 3 * 60 * 1000;
             const recentOnly = logsData
-                .filter(log => new Date(log.timestamp).getTime() > twoMinutesAgo)
+                .filter(log => new Date(log.timestamp).getTime() > oneHourAgo)
                 .slice(0, 15); // מקסימום 15 שורות בפיד
 
             setRecentLogs(recentOnly);
@@ -128,7 +128,7 @@ export const VictimMonitorView: React.FC = () => {
         fetchData();
         fetchLiveFeed();
         // סטטיסטיקות ורשימה שחורה — כל 3 שניות
-        const statsInterval = setInterval(fetchData, 3000);
+        const statsInterval = setInterval(fetchData, 1000);
         // פיד חי — כל שנייה לתחושת זמן אמת
         const feedInterval = setInterval(fetchLiveFeed, 1000);
         return () => {

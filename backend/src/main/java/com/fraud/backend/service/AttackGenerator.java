@@ -1,6 +1,7 @@
 package com.fraud.backend.service;
 
 import com.fraud.backend.model.entity.AttackScenario;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
@@ -29,6 +30,9 @@ public class AttackGenerator {
     private final Map<Long, ScheduledFuture<?>> activeTasks = new ConcurrentHashMap<>();
     private final Random random = new Random();
 
+    @Value("${victim.url:http://localhost:8081}")
+    private String victimUrl;
+
     public void startAttack(AttackScenario scenario) {
         try {
             Map<String, Object> params = scenario.getParams();
@@ -45,23 +49,31 @@ public class AttackGenerator {
                 durationSeconds = Integer.parseInt(params.get("duration").toString());
             }
 
-            String targetUrl = "http://localhost:8081/api/target";
+            // קביעת ה-Endpoint (ברירת מחדל: /api/target)
+            String endpoint = (params != null && params.get("targetEndpoint") != null)
+                    ? params.get("targetEndpoint").toString()
+                    : "/api/target";
+
+            // וידוא שה-endpoint מתחיל ב-/
+            if (!endpoint.startsWith("/")) endpoint = "/" + endpoint;
+
+            String targetUrl = victimUrl + endpoint;
+
+            // הגדרת עיכוב משתנה בהתאם מדד ה-RPS שביקש המשתמש בממשק
             long delayMicros = 1_000_000 / Math.max(rps, 1);
 
-            // יצירת משימת התקיפה המחזורית
+            // יצירת משימת תקיפה ברקע
             ScheduledFuture<?> attackTask = scheduler.scheduleAtFixedRate(() -> {
-                String attackTypeName = scenario.getAttackType() != null ? scenario.getAttackType().getName() : "UNKNOWN";
+                String attackTypeName = scenario.getAttackType() != null ? scenario.getAttackType().getName()
+                        : "UNKNOWN";
                 executeSingleRequest(targetUrl, attackTypeName, params);
             }, 0, delayMicros, TimeUnit.MICROSECONDS);
 
             activeTasks.put(scenario.getId(), attackTask);
-            System.out.println("🚀 Attack Started: " + scenario.getName() + " [" + rps + " RPS]");
-            System.out.println("⏱️ Attack will automatically stop in " + durationSeconds + " seconds.");
 
-            // תזמון עצירה אוטומטית
+            // תזמון עצירה אוטומטית למניעת קריסת רשת מוחלטת
             scheduler.schedule(() -> {
                 stopAttack(scenario.getId());
-                System.out.println("⏲️ Auto-stop triggered for scenario: " + scenario.getName());
             }, durationSeconds, TimeUnit.SECONDS);
 
         } catch (Exception e) {
@@ -87,8 +99,10 @@ public class AttackGenerator {
                     .timeout(Duration.ofSeconds(2));
 
             if ("BRUTE_FORCE".equals(type)) {
+                // שליפת הפיילוד כפי שהוזן על ידי האנליסט במיכל ה-React
                 String dynamicPayload = (params != null && params.get("payload") != null)
-                        ? params.get("payload").toString() : "user=admin";
+                        ? params.get("payload").toString()
+                        : "";
 
                 // מחליף את תגית הרנדום מתוך ה-UI במספר דינמי ליצירת תבניות שונות
                 if (dynamicPayload.contains("{{RANDOM}}")) {
