@@ -39,6 +39,8 @@ services:
       APPLICATION_SECURITY_JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       APPLICATION_SECURITY_JWT_EXPIRATION: ${JWT_EXPIRATION}
       VICTIM_URL: http://victim-server:8081
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
+      TZ: Asia/Jerusalem
     depends_on:
       postgres:
         condition: service_healthy
@@ -60,6 +62,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       BACKEND_URL: http://backend:8080
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
+      TZ: Asia/Jerusalem
     depends_on:
       postgres:
         condition: service_healthy

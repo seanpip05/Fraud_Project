@@ -1,18 +1,21 @@
 # ===== שלב 1: Build =====
-# Node.js לבניית ה-React App
-FROM node:20-alpine AS build
+FROM node:20-slim AS build
 WORKDIR /app
 
-# התקנת dependencies (נפרד מה-COPY כדי לנצל Cache)
-COPY package*.json ./
-RUN npm ci
+# שדרוג ה-NPM הפנימי לגרסה האחרונה שפותרת את באג הקריסה
+RUN npm install -g npm@latest
 
-# בניית ה-production bundle
+# העתקה *רק* של ה-package.json (בלי ה-lock של ווינדוס!)
+COPY package.json ./
+
+# התקנה בלי לוגים מיותרים ובלי לבקש תרומות
+RUN npm install --no-audit --no-fund --loglevel=error
+
+# העתקת שאר הקוד ובנייה (כעת ה-dockerignore ימנע דריסה של node_modules)
 COPY . .
 RUN npm run build
 
 # ===== שלב 2: Serve =====
-# Nginx כשרת סטטי מהיר לשרת את ה-React
 FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html
 

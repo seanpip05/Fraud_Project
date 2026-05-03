@@ -62,7 +62,8 @@ public class AnalyticsService {
                         .filter(RuleDTO::isActive)
                         .collect(Collectors.toList());
 
-                System.out.println("🔄 Rules Refresh: Fetched " + allRules.size() + " total rules from SOC Backend, " + activeRules.size() + " are currently ACTIVE.");
+                System.out.println("🔄 Rules Refresh: Fetched " + allRules.size() + " total rules from SOC Backend, "
+                        + activeRules.size() + " are currently ACTIVE.");
             }
         } catch (Exception e) {
             System.err.println("❌ Error fetching rules from SOC API (Backend): " + e.getMessage());
@@ -71,7 +72,8 @@ public class AnalyticsService {
 
     /**
      * פונקציית העל לחישוב ציון סיכון דינמי.
-     * כעת משתמשת בחוקים החיים שנלקחו משרת ה-SOC ומחזירה גם סיבה לחסימה לצורך HTTP Code מדויק.
+     * כעת משתמשת בחוקים החיים שנלקחו משרת ה-SOC ומחזירה גם סיבה לחסימה לצורך HTTP
+     * Code מדויק.
      */
     public RiskEvaluationResult evaluateRiskAndBlock(String ip, String payload, String endpoint) {
         if (isIpBlocked(ip)) {
@@ -92,11 +94,11 @@ public class AnalyticsService {
         }
 
         if (activeRules.isEmpty()) {
-            // לוג זמני לדיבאג
-            // System.out.println("DEBUG: No active rules to evaluate.");
+            // System.out.println("⚠️ DEBUG: No active rules in memory!");
         }
 
         String primaryReason = "NONE";
+        // System.out.println("🔍 Evaluating request from " + ip + " | RPS: " + rps + " | Rules: " + activeRules.size());
 
         for (RuleDTO rule : activeRules) {
             String attackType = rule.getAttackType();
@@ -107,7 +109,7 @@ public class AnalyticsService {
                 if (payload != null) {
                     String pUpper = payload.toUpperCase();
                     if (pUpper.contains("OR 1=1") || pUpper.contains("DROP ") || pUpper.contains("<SCRIPT>")) {
-                        ruleViolated = true; // במקרה של קוד זדוני זה נחשב הפרה מידית (Threshold 1)
+                        ruleViolated = true;
                     }
                 }
             }
@@ -128,13 +130,13 @@ public class AnalyticsService {
             }
 
             if (ruleViolated) {
-                System.out.println("⚠️ Rule violated: " + rule.getRuleName() + " for IP: " + ip);
+                System.out.println("🚨 RULE TRIGGERED: " + rule.getRuleName() + " (Threshold: " + rule.getThreshold() + ")");
                 if ("BLOCK".equalsIgnoreCase(rule.getAction())) {
-                    score = 100; // מקפיץ מידית לחסימה
+                    score = 100;
                     primaryReason = attackType.toUpperCase().replace(" ", "_");
                     break;
                 } else if ("ALERT".equalsIgnoreCase(rule.getAction())) {
-                    score += 40; // מוסיף קנס אך לא בהכרח חוסם
+                    score += 40;
                     if (primaryReason.equals("NONE")) {
                         primaryReason = attackType.toUpperCase().replace(" ", "_") + "_ALERT";
                     }
@@ -143,7 +145,7 @@ public class AnalyticsService {
         }
 
         if (score > 5) {
-            System.out.println("📊 Final Risk Score for " + ip + ": " + score);
+            System.out.println("📊 FINAL CALCULATION -> IP: " + ip + " | Score: " + score + " | Reason: " + primaryReason);
         }
 
         int finalScore = Math.min(100, score);
@@ -164,7 +166,7 @@ public class AnalyticsService {
         stats.put("attacksLastMinute", attackLogRepository.countByTimestampAfter(LocalDateTime.now().minusMinutes(1)));
         stats.put("blockedIpsCount", blockedIpRepository.count());
         stats.put("currentRiskScore",
-                attackLogRepository.getAverageRiskScoreAfter(LocalDateTime.now().minusSeconds(10)));
+                attackLogRepository.getLastRiskScore());
         return stats;
     }
 
@@ -235,8 +237,13 @@ public class AnalyticsService {
             this.reason = reason;
         }
 
-        public int getScore() { return score; }
-        public String getReason() { return reason; }
+        public int getScore() {
+            return score;
+        }
+
+        public String getReason() {
+            return reason;
+        }
     }
 
     public static class RuleDTO {
@@ -250,18 +257,56 @@ public class AnalyticsService {
         private String action;
         private String attackType;
 
-        public String getName() { return name; }
-        public void setName(String name) { this.name = name; }
-        public boolean isActive() { return isActive; }
-        public void setActive(boolean active) { isActive = active; }
-        public Integer getThreshold() { return threshold; }
-        public void setThreshold(Integer threshold) { this.threshold = threshold; }
-        public Integer getTimeWindow() { return timeWindow; }
-        public void setTimeWindow(Integer timeWindow) { this.timeWindow = timeWindow; }
-        public String getAction() { return action; }
-        public void setAction(String action) { this.action = action; }
-        public String getAttackType() { return attackType; }
-        public void setAttackType(String attackType) { this.attackType = attackType; }
-        public String getRuleName() { return name; } // Helper for compatibility
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public boolean isActive() {
+            return isActive;
+        }
+
+        public void setActive(boolean active) {
+            isActive = active;
+        }
+
+        public Integer getThreshold() {
+            return threshold;
+        }
+
+        public void setThreshold(Integer threshold) {
+            this.threshold = threshold;
+        }
+
+        public Integer getTimeWindow() {
+            return timeWindow;
+        }
+
+        public void setTimeWindow(Integer timeWindow) {
+            this.timeWindow = timeWindow;
+        }
+
+        public String getAction() {
+            return action;
+        }
+
+        public void setAction(String action) {
+            this.action = action;
+        }
+
+        public String getAttackType() {
+            return attackType;
+        }
+
+        public void setAttackType(String attackType) {
+            this.attackType = attackType;
+        }
+
+        public String getRuleName() {
+            return name;
+        } // Helper for compatibility
     }
 }

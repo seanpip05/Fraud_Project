@@ -91,7 +91,7 @@ graph TD
 
 ## 📸 Dashboard Preview
 
-*Insert your beautiful screenshots here!*
+![img.png](client/src/assets/img.png)
 - **Main SOC View**: Monitoring global security status.
 - **Victim Monitor**: Real-time traffic analysis.
 - **Rule Builder**: Configuring the defense logic.

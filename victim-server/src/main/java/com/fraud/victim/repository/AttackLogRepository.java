@@ -15,9 +15,9 @@ public interface AttackLogRepository extends JpaRepository<AttackLog, Long> {
     // ספירת כמות הלוגים בפרק זמן מסוים (למשל בדקה האחרונה)
     long countByTimestampAfter(LocalDateTime timestamp);
 
-    // שליפת ציון סיכון ממוצע בדקה האחרונה
-    @Query("SELECT COALESCE(AVG(a.riskScore), 0) FROM AttackLog a WHERE a.timestamp > :timestamp")
-    Double getAverageRiskScoreAfter(@Param("timestamp") LocalDateTime timestamp);
+    // שליפת ציון הסיכון של הבקשה האחרונה ביותר שנרשמה
+    @Query("SELECT COALESCE(a.riskScore, 0) FROM AttackLog a ORDER BY a.timestamp DESC LIMIT 1")
+    Integer getLastRiskScore();
 
     // שליפת ה-IPs הכי פעילים (לזיהוי תוקפים מרכזיים)
     @Query("SELECT a.clientIp, COUNT(a) as total FROM AttackLog a GROUP BY a.clientIp ORDER BY total DESC")
