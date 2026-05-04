@@ -162,11 +162,20 @@ public class AnalyticsService {
 
     public Map<String, Object> getQuickStats() {
         Map<String, Object> stats = new HashMap<>();
+        long attacksLastMinute = attackLogRepository.countByTimestampAfter(LocalDateTime.now().minusMinutes(1));
+
         stats.put("totalAttacks", attackLogRepository.count());
-        stats.put("attacksLastMinute", attackLogRepository.countByTimestampAfter(LocalDateTime.now().minusMinutes(1)));
+        stats.put("attacksLastMinute", attacksLastMinute);
         stats.put("blockedIpsCount", blockedIpRepository.count());
-        stats.put("currentRiskScore",
-                attackLogRepository.getLastRiskScore());
+
+        // אם אין התקפות בדקה האחרונה, הציון חוזר ל-0 כדי לסמן שהמתקפה נגמרה
+        if (attacksLastMinute == 0) {
+            stats.put("currentRiskScore", 0);
+        } else {
+            Integer lastScore = attackLogRepository.getLastRiskScore();
+            stats.put("currentRiskScore", lastScore != null ? lastScore : 0);
+        }
+
         return stats;
     }
 
